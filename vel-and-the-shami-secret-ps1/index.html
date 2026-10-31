@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"/>
 <meta name="color-scheme" content="dark"/>
 <link rel="icon" href="data:,"/>
-<title>Vel and the Shami Secret PS2</title>
+<title>Vel and the Shami Secret PS3</title>
 <style>
   :root{color-scheme:dark; --ink:#f0eedd; --dim:#a9b39b; --red:#ff5252; --gold:#f2c14e; --panel:rgba(10,14,20,.78)}
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
@@ -26,6 +26,8 @@
   /* Stage */
   #stage{position:absolute;inset:0;background:#000}
   #stage canvas{width:100%!important;height:100%!important;display:block}
+  /* PS3 colour grade: warm highlights, soft vignette, gentle contrast lift */
+  #grade{position:absolute;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,transparent 52%,rgba(5,10,4,.40) 100%),linear-gradient(180deg,rgba(255,242,196,.07),transparent 28%,transparent 72%,rgba(8,18,38,.12))}
   /* Boot / title */
   #boot{position:absolute;inset:0;z-index:20;background:linear-gradient(180deg,#060a12 0%,#0d1622 55%,#12200f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;gap:0}
   #boot .sys{font-size:11px;letter-spacing:.4em;color:#7d8ea3;margin-bottom:26px}
@@ -57,6 +59,7 @@
 <body>
 <div id="wrap">
   <div id="stage"></div>
+  <div id="grade"></div>
 
   <div id="hud">
     <div class="plate"><div id="hearts">♥♥♥</div><div class="stat" style="margin-top:4px">VEL · FOREST SCREEN 1</div></div>
@@ -77,13 +80,13 @@
   <div id="dead"><h2>YOU FELL</h2><p>The forest keeps the secret — for now.</p><button id="retryBtn" type="button">▶ TRY AGAIN</button></div>
 
   <div id="boot">
-    <div class="sys">128-BIT · SMOOTH 3D · REAL-TIME SHADOWS</div>
-    <h1>Vel and the<br/><span>Shami Secret</span> — PS2</h1>
+    <div class="sys">HD 1080p · DYNAMIC LIGHTING · BLOOM · 60 FPS</div>
+    <h1>Vel and the<br/><span>Shami Secret</span> — PS3</h1>
     <div class="sub">Year One · The Forest · Lesson: Patience</div>
     <div class="meta">ONE OVERWORLD SCREEN · THE GREAT SHAMI TREE · THE CAVE</div>
     <button id="startBtn" type="button">▶ PRESS START</button>
     <div class="controls">MOVE — WASD / ARROWS / LEFT STICK &nbsp;·&nbsp; SWORD — Z or SPACE<br/>BOW — X (12 ARROWS) &nbsp;·&nbsp; SHIELD BLOCKS FROM THE FRONT<br/>Your dog follows. Boars charge. The hawk swoops. Watch their shadows.</div>
-    <div class="copy">AN ORIGINAL FAN-MADE TRIBUTE IN THE STYLE OF 2000 · NO LOGOS, NO COPIED ASSETS</div>
+    <div class="copy">AN ORIGINAL FAN-MADE TRIBUTE IN THE STYLE OF 2006 · NO LOGOS, NO COPIED ASSETS</div>
   </div>
   <div id="err"></div>
 </div>
@@ -96,15 +99,15 @@ var errBox=document.getElementById('err');
 window.onerror=function(m,s,l){ errBox.style.display='block'; errBox.textContent='Error: '+m+' (line '+l+')'; };
 window.addEventListener('unhandledrejection',function(e){ errBox.style.display='block'; errBox.textContent='Error: '+(e.reason&&e.reason.message||e.reason); });
 
-/* ============ PS2 MATERIALS — smooth Phong shading, filtered textures ============ */
-function M(c,o){ var p={color:c,shininess:24,specular:0x2a2a2a}; if(o) for(var k in o) p[k]=o[k]; return new THREE.MeshPhongMaterial(p); }
-function MT(tex,c,o){ var p={map:tex,color:(c===undefined?0xffffff:c),shininess:14,specular:0x1c1c1c}; if(o) for(var k in o) p[k]=o[k]; return new THREE.MeshPhongMaterial(p); }
+/* ============ PS3 MATERIALS — high-spec Phong, crisp filtered textures ============ */
+function M(c,o){ var p={color:c,shininess:38,specular:0x3d3d3d}; if(o) for(var k in o) p[k]=o[k]; return new THREE.MeshPhongMaterial(p); }
+function MT(tex,c,o){ var p={map:tex,color:(c===undefined?0xffffff:c),shininess:22,specular:0x2c2c2c}; if(o) for(var k in o) p[k]=o[k]; return new THREE.MeshPhongMaterial(p); }
 function box(w,h,d,c,o){ var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), M(c,o)); m.castShadow=true; m.receiveShadow=true; return m; }
 function cyl(rt,rb,h,c,seg,o){ var m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||20), M(c,o)); m.castShadow=true; m.receiveShadow=true; return m; }
 function cone(r,h,c,seg,o){ var m=new THREE.Mesh(new THREE.ConeGeometry(r,h,seg||20), M(c,o)); m.castShadow=true; m.receiveShadow=true; return m; }
 function sph(r,c,ws,hs,o){ var m=new THREE.Mesh(new THREE.SphereGeometry(r,ws||24,hs||18), M(c,o)); m.castShadow=true; m.receiveShadow=true; return m; }
 
-/* ============ RENDERER — native res, anti-aliased, soft shadows ============ */
+/* ============ RENDERER — full native HD res, anti-aliased, high-res soft shadows ============ */
 var stage=document.getElementById('stage');
 var renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
@@ -112,7 +115,7 @@ renderer.shadowMap.enabled=true;
 if(THREE.PCFSoftShadowMap!==undefined) renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 stage.appendChild(renderer.domElement);
 if(THREE.sRGBEncoding!==undefined) renderer.outputEncoding=THREE.sRGBEncoding;
-if(THREE.ACESFilmicToneMapping!==undefined){ renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.06; }
+if(THREE.ACESFilmicToneMapping!==undefined){ renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.14; }
 var maxAniso=renderer.capabilities.getMaxAnisotropy?renderer.capabilities.getMaxAnisotropy():4;
 function fit(){
   var w=stage.clientWidth||window.innerWidth, h=stage.clientHeight||window.innerHeight;
@@ -120,21 +123,36 @@ function fit(){
   camera.aspect=w/h; camera.updateProjectionMatrix();
 }
 var scene=new THREE.Scene();
-scene.background=new THREE.Color(0x9ec9e8);
-scene.fog=new THREE.Fog(0xa9cba4,42,105);
+scene.background=new THREE.Color(0x8ec3e8);
+scene.fog=new THREE.Fog(0xb4d2ac,48,120);
 var camera=new THREE.PerspectiveCamera(55,4/3,0.1,220);
 window.addEventListener('resize',fit);
 
-/* ============ LIGHTING — dynamic sun with soft shadows ============ */
-scene.add(new THREE.HemisphereLight(0xd6ecff,0x527a38,0.55));
-scene.add(new THREE.AmbientLight(0xfff2cc,0.25));
-var sun=new THREE.DirectionalLight(0xffe9b0,1.15); sun.position.set(16,26,10); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
+/* ============ LIGHTING — dynamic sun, high-res shadow map, rim + cave glow ============ */
+scene.add(new THREE.HemisphereLight(0xdff0ff,0x527a38,0.6));
+scene.add(new THREE.AmbientLight(0xfff2cc,0.22));
+var sun=new THREE.DirectionalLight(0xffeec0,1.3); sun.position.set(16,26,10); sun.castShadow=true;
+var SHADOW_RES=(window.innerWidth<700?2048:4096);
+sun.shadow.mapSize.set(SHADOW_RES,SHADOW_RES);
 sun.shadow.camera.left=-30; sun.shadow.camera.right=30; sun.shadow.camera.top=30; sun.shadow.camera.bottom=-30;
-sun.shadow.camera.near=1; sun.shadow.camera.far=70; sun.shadow.bias=-0.0006;
-if(sun.shadow.radius!==undefined) sun.shadow.radius=2;
+sun.shadow.camera.near=1; sun.shadow.camera.far=70; sun.shadow.bias=-0.0004;
+if(sun.shadow.radius!==undefined) sun.shadow.radius=3;
 scene.add(sun);
-var fill=new THREE.DirectionalLight(0x9fc2ff,0.35); fill.position.set(-10,12,-12); scene.add(fill);
+var fill=new THREE.DirectionalLight(0x9fc2ff,0.4); fill.position.set(-10,12,-12); scene.add(fill);
+var rim=new THREE.DirectionalLight(0xfff3d0,0.45); rim.position.set(-6,8,18); scene.add(rim); // warm rim from behind camera
+var caveGlow=new THREE.PointLight(0xff9a3c,1.1,11,1.6); caveGlow.position.set(-9,2.4,-19.2); scene.add(caveGlow);
+/* Soft additive glow sprites — PS3-style bloom on the sun and cave torches */
+function glowSprite(color,scale,opacity){
+  var cv=document.createElement('canvas'); cv.width=cv.height=128;
+  var cx=cv.getContext('2d'); var gr=cx.createRadialGradient(64,64,2,64,64,64);
+  gr.addColorStop(0,'rgba(255,255,255,0.9)'); gr.addColorStop(0.35,color); gr.addColorStop(1,'rgba(0,0,0,0)');
+  cx.fillStyle=gr; cx.fillRect(0,0,128,128);
+  var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,opacity:opacity,blending:THREE.AdditiveBlending,depthWrite:false}));
+  sp.scale.set(scale,scale,1); return sp;
+}
+var sunGlow=glowSprite('rgba(255,214,110,0.55)',26,0.75); sunGlow.position.set(34,32,-30); scene.add(sunGlow);
+var torchGlowL=glowSprite('rgba(255,140,40,0.65)',3.4,0.85); torchGlowL.position.set(-12.1,3.1,-20.2); scene.add(torchGlowL);
+var torchGlowR=glowSprite('rgba(255,140,40,0.65)',3.4,0.85); torchGlowR.position.set(-5.9,3.1,-20.2); scene.add(torchGlowR);
 
 /* ============ PROCEDURAL TEXTURES (filtered, mipmapped) ============ */
 function makeTex(size,draw,rx,ry){
@@ -214,6 +232,56 @@ for(var i=0;i<42;i++){
   else { var tuft=cone(0.26,0.75,Math.random()<0.25?0xd8c95a:0x478636,10); tuft.position.set(gx,0.37,gz); scene.add(tuft); }
 }
 
+/* ============ PS3 DETAIL PASS — ground detail, AO contact shadows, set dressing ============ */
+var shineFx=[];
+function aoDisc(x,z,r,op){
+  var d=new THREE.Mesh(new THREE.CircleGeometry(r,24), new THREE.MeshBasicMaterial({color:0x14230c,transparent:true,opacity:op||0.30,depthWrite:false}));
+  d.rotation.x=-Math.PI/2; d.position.set(x,0.045,z); scene.add(d); return d;
+}
+aoDisc(3,-14,3.6,0.34); aoDisc(-9,-20.2,3.4,0.4);
+// Soft contact shadow under every tree and rock (ambient-occlusion feel)
+colliders.forEach(function(c){ if(c.r>0.5) aoDisc(c.x,c.z,c.r*1.5,0.22); });
+// Individual grass blades + pebbles scattered over the clearing
+for(var gi=0;gi<170;gi++){
+  var bx=(Math.random()*36-19), bz=(Math.random()*38-19);
+  if(bx>14.5||(Math.abs(bx-3)<3.2&&Math.abs(bz+14)<3.2)) continue;
+  var blade=cone(0.055,0.5+Math.random()*0.45,Math.random()<0.3?0x6aa84c:0x4c8438,5);
+  blade.position.set(bx,0.28,bz); blade.rotation.z=(Math.random()-0.5)*0.35; blade.castShadow=false; scene.add(blade);
+}
+for(var pi=0;pi<46;pi++){
+  var px2=(Math.random()*30-17), pz2=(Math.random()*34-17);
+  var peb=sph(0.09+Math.random()*0.1,0x8d867c,10,8,{shininess:30}); peb.scale.y=0.55; peb.position.set(px2,0.06,pz2); peb.castShadow=false; scene.add(peb);
+}
+// Shami tree dressing: extra foliage layers, hanging vines, glowing fruit
+[[1.2,9.6,0.8,1.7],[-1.6,9.3,-0.5,1.9],[3.4,8.4,0.4,1.5],[-3.2,8.2,0.9,1.6],[0.2,10.1,-1.2,1.8]].forEach(function(p){
+  var c=sph(p[3],0x3f7d33,24,18); c.position.set(3+p[0],p[1],-14+p[2]); scene.add(c);
+});
+for(var vi=0;vi<7;vi++){
+  var vx=3+(Math.random()*4.4-2.2), vz=-14+(Math.random()*2.4-1.2);
+  var vine=cyl(0.03,0.02,1.6+Math.random()*1.3,0x3d7a2a,6); vine.position.set(vx,6.7-Math.random()*0.5,vz); vine.castShadow=false; scene.add(vine);
+  var leaf=sph(0.14,0x55a047,10,8); leaf.scale.set(1,0.5,1); leaf.position.set(vx,5.9,vz); scene.add(leaf);
+}
+for(var fi=0;fi<9;fi++){
+  var fa=Math.random()*6.28, fr=2.2+Math.random()*1.6;
+  var fruit=sph(0.13,0xffb84d,12,10,{shininess:80,specular:0xcc8833,emissive:0x442200});
+  fruit.position.set(3+Math.cos(fa)*fr,7.6+Math.random()*1.4,-14+Math.sin(fa)*fr); scene.add(fruit);
+  var fglow=glowSprite('rgba(255,170,60,0.5)',0.85,0.5); fglow.position.copy(fruit.position); scene.add(fglow); shineFx.push(fglow.material);
+}
+// Carved cliff strata + cave dressing: layered rock bands, lintel carving, torch brackets
+for(var si=0;si<4;si++){
+  var band=new THREE.Mesh(new THREE.BoxGeometry(46,0.35,3.3), MT(rockTex,si%2?0xbfb4a4:0x8f857a));
+  band.position.set(0,1.1+si*1.7,-22.5); band.receiveShadow=true; scene.add(band);
+}
+var lintel=box(6.6,0.5,1.7,0xd8ab2e,{shininess:60,specular:0x886611}); lintel.position.set(-9,5.35,-20.7); scene.add(lintel);
+[[-12.1,3.1],[-5.9,3.1]].forEach(function(p){
+  var br=box(0.16,0.7,0.16,0x2b2b2b); br.position.set(p[0],p[1]-0.3,-20.2); scene.add(br);
+  var flame=cone(0.16,0.5,0xffa63c,10,{emissive:0xcc5500,shininess:10}); flame.position.set(p[0],p[1]+0.15,-20.2); scene.add(flame); shineFx.push(flame.material);
+});
+// River shine: foam edge + drifting sun-sparkle strip
+var foam=new THREE.Mesh(new THREE.PlaneGeometry(0.7,46), new THREE.MeshBasicMaterial({color:0xeaf7ff,transparent:true,opacity:0.35,depthWrite:false}));
+foam.rotation.x=-Math.PI/2; foam.position.set(16.2,0.06,0); scene.add(foam); shineFx.push(foam.material);
+var sparkle=glowSprite('rgba(190,225,255,0.6)',7,0.5); sparkle.position.set(19.5,0.5,4); scene.add(sparkle);
+
 /* ============ CHARACTER BUILDERS (smooth, rounded, high-poly) ============ */
 function makeVel(){
   var g=new THREE.Group(), P={};
@@ -221,7 +289,7 @@ function makeVel(){
   P.legR=box(0.34,0.85,0.38,0x4a3626); P.legR.geometry.translate(0,-0.42,0); P.legR.position.set(0.22,0.85,0); g.add(P.legR);
   var bootL=box(0.38,0.18,0.55,0x2e2015); bootL.position.set(-0.22,0.09,0.06); g.add(bootL);
   var bootR=box(0.38,0.18,0.55,0x2e2015); bootR.position.set(0.22,0.09,0.06); g.add(bootR);
-  var torso=box(0.95,1.05,0.55,0x2e7d55,{shininess:30}); torso.position.y=1.38; g.add(torso);
+  var torso=box(0.95,1.05,0.55,0x2e7d55,{shininess:30}); torso.position.y=1.38; g.add(torso); P.torso=torso;
   var chest=sph(0.34,0x359268,18,14); chest.scale.set(1.25,0.8,0.62); chest.position.set(0,1.62,0.1); g.add(chest);
   var belt=box(0.99,0.2,0.59,0x7a4e26); belt.position.y=0.98; g.add(belt);
   var buckle=box(0.2,0.14,0.62,0xf2c14e,{shininess:80,specular:0x886611}); buckle.position.y=0.98; g.add(buckle);
@@ -255,6 +323,20 @@ function makeVel(){
   var bowTipB=sph(0.06,0xd8ab2e,8,6); bowTipB.position.y=-0.75; bow.add(bowTipB);
   var string=box(0.02,1.44,0.02,0xf0eedd); string.position.x=0.09; bow.add(string);
   var quiver=cyl(0.14,0.11,0.7,0x7a4e26,12); quiver.position.set(-0.3,1.5,-0.38); quiver.rotation.z=0.35; g.add(quiver);
+  // PS3 detail: defined face, collar, tunic folds, pouches, sleeve cuffs
+  var nose=sph(0.07,0xd89a5c,10,8); nose.position.set(0,2.2,0.36); g.add(nose);
+  var browL=box(0.13,0.035,0.03,0x2b1c10); browL.position.set(-0.13,2.36,0.345); g.add(browL);
+  var browR=box(0.13,0.035,0.03,0x2b1c10); browR.position.set(0.13,2.36,0.345); g.add(browR);
+  var mouth=box(0.12,0.03,0.02,0x8a5a30); mouth.position.set(0,2.08,0.345); g.add(mouth);
+  var earL2=sph(0.09,0xe0aa6e,10,8); earL2.scale.set(0.5,0.9,0.7); earL2.position.set(-0.35,2.24,0); g.add(earL2);
+  var earR2=sph(0.09,0xe0aa6e,10,8); earR2.scale.set(0.5,0.9,0.7); earR2.position.set(0.35,2.24,0); g.add(earR2);
+  var collar=new THREE.Mesh(new THREE.TorusGeometry(0.26,0.07,10,22), M(0x9c6a33,{shininess:40})); collar.rotation.x=Math.PI/2; collar.position.y=1.95; collar.castShadow=true; g.add(collar);
+  var hemL=box(0.3,0.34,0.5,0x256b47); hemL.position.set(-0.24,0.78,0); hemL.rotation.x=0.1; g.add(hemL);
+  var hemR=box(0.3,0.34,0.5,0x256b47); hemR.position.set(0.24,0.78,0); hemR.rotation.x=0.1; g.add(hemR);
+  var pouch=box(0.26,0.3,0.16,0x7a4e26); pouch.position.set(0.42,0.92,0.24); g.add(pouch);
+  var cuffL=box(0.36,0.16,0.4,0x9c6a33); cuffL.position.set(-0.22,0.22,0); g.add(cuffL);
+  var cuffR=box(0.36,0.16,0.4,0x9c6a33); cuffR.position.set(0.22,0.22,0); g.add(cuffR);
+  var cape=box(0.8,1.0,0.08,0x256b47); cape.position.set(0,1.35,-0.34); cape.rotation.x=0.08; g.add(cape);
   g.userData.parts=P; return g;
 }
 function makeDog(){
@@ -274,6 +356,11 @@ function makeDog(){
   [[0.32,0.16],[0.32,-0.16],[-0.32,0.16],[-0.32,-0.16]].forEach(function(p){ var l=cyl(0.07,0.06,0.36,0xa87c42,8); l.geometry.translate(0,-0.18,0); l.position.set(p[0],0.37,p[1]); g.add(l); P.legs.push(l); });
   var collar=new THREE.Mesh(new THREE.TorusGeometry(0.2,0.05,10,20), M(0xc23b3b,{shininess:50})); collar.rotation.y=Math.PI/2; collar.position.set(0.48,0.74,0); collar.castShadow=true; g.add(collar);
   var tag=sph(0.06,0xf2c14e,10,8,{shininess:100}); tag.position.set(0.52,0.52,0); g.add(tag);
+  // PS3 detail: fur tufts along the back, fluffy cheeks, paw shading
+  for(var dfi=0;dfi<5;dfi++){ var tu=cone(0.09,0.22,0xa87c42,8); tu.position.set(0.3-dfi*0.18,0.92,0); tu.rotation.z=-0.3; g.add(tu); }
+  var cheekL=sph(0.13,0xe2c088,12,10); cheekL.scale.set(0.8,0.8,0.6); cheekL.position.set(0.14,0.72,0.2); g.add(cheekL);
+  var cheekR=sph(0.13,0xe2c088,12,10); cheekR.scale.set(0.8,0.8,0.6); cheekR.position.set(0.14,0.72,-0.2); g.add(cheekR);
+  var tailTip=sph(0.07,0xe2c088,10,8); tailTip.position.set(-0.72,0.95,0); g.add(tailTip);
   g.userData.parts=P; return g;
 }
 function makeBoar(){
@@ -294,6 +381,11 @@ function makeBoar(){
   P.legs=[];
   [[0.42,0.26],[0.42,-0.26],[-0.42,0.26],[-0.42,-0.26]].forEach(function(p){ var l=cyl(0.085,0.07,0.44,0x4a3524,8); l.geometry.translate(0,-0.22,0); l.position.set(p[0],0.45,p[1]); g.add(l); P.legs.push(l); });
   var tail=cyl(0.03,0.02,0.32,0x3a2a1e,6); tail.position.set(-0.95,1.0,0); tail.rotation.z=0.9; g.add(tail);
+  // PS3 detail: bristle ridge of fur spikes, nostrils, scarred flank shading
+  for(var bfi=0;bfi<6;bfi++){ var sp=cone(0.07,0.26,0x2e2118,7); sp.position.set(0.42-bfi*0.19,1.32,0); sp.rotation.z=0.25; g.add(sp); }
+  var nosL=sph(0.03,0x120a06,8,6); nosL.position.set(1.36,0.76,0.07); g.add(nosL);
+  var nosR=sph(0.03,0x120a06,8,6); nosR.position.set(1.36,0.76,-0.07); g.add(nosR);
+  var flank=sph(0.4,0x5d4433,16,12); flank.scale.set(0.9,0.6,0.25); flank.position.set(-0.25,0.8,0.4); g.add(flank);
   g.userData.parts=P; return g;
 }
 function makeHawk(){
@@ -305,12 +397,13 @@ function makeHawk(){
   var beak=cone(0.08,0.3,0xf2c14e,10,{shininess:60}); beak.rotation.z=-Math.PI/2; beak.position.set(0.82,0.11,0); g.add(beak);
   var eyeHL=box(0.05,0.05,0.03,0x14100c,{shininess:70}); eyeHL.position.set(0.66,0.19,0.15); g.add(eyeHL);
   var eyeHR=box(0.05,0.05,0.03,0x14100c,{shininess:70}); eyeHR.position.set(0.66,0.19,-0.15); g.add(eyeHR);
+  // PS3 detail: layered feathered wings — fanned flight feathers over a covert base
   P.wingL=new THREE.Group(); P.wingL.position.set(0,0.1,0.2); g.add(P.wingL);
-  var wl=box(0.6,0.06,1.25,0x6b4c26,{shininess:26}); wl.geometry.translate(0,0,0.62); P.wingL.add(wl);
-  var wlTip=box(0.45,0.05,0.6,0x453114); wlTip.position.set(0,0,1.45); P.wingL.add(wlTip);
+  var wl=box(0.6,0.06,1.1,0x7d5a30,{shininess:30}); wl.geometry.translate(0,0,0.55); P.wingL.add(wl);
+  for(var fw=0;fw<5;fw++){ var fe=box(0.34-fw*0.02,0.04,0.85, fw%2?0x5a4020:0x6b4c26,{shininess:26}); fe.position.set(-0.08-fw*0.05, -0.01*fw, 1.05+fw*0.13); fe.rotation.y=0.16+fw*0.07; P.wingL.add(fe); }
   P.wingR=new THREE.Group(); P.wingR.position.set(0,0.1,-0.2); g.add(P.wingR);
-  var wr=box(0.6,0.06,1.25,0x6b4c26,{shininess:26}); wr.geometry.translate(0,0,-0.62); P.wingR.add(wr);
-  var wrTip=box(0.45,0.05,0.6,0x453114); wrTip.position.set(0,0,-1.45); P.wingR.add(wrTip);
+  var wr=box(0.6,0.06,1.1,0x7d5a30,{shininess:30}); wr.geometry.translate(0,0,-0.55); P.wingR.add(wr);
+  for(var fw2=0;fw2<5;fw2++){ var fe2=box(0.34-fw2*0.02,0.04,0.85, fw2%2?0x5a4020:0x6b4c26,{shininess:26}); fe2.position.set(-0.08-fw2*0.05, -0.01*fw2, -1.05-fw2*0.13); fe2.rotation.y=-0.16-fw2*0.07; P.wingR.add(fe2); }
   var tailF=box(0.5,0.05,0.55,0x9a7a44); tailF.position.set(-0.62,0,0); g.add(tailF);
   g.userData.parts=P; return g;
 }
@@ -333,6 +426,37 @@ function spawnPickup(x,z,kind){
   if(kind==='coin') m.rotation.x=Math.PI/2;
   m.position.set(x,0.55,z); scene.add(m);
   pickups.push({g:m,kind:kind,t:0});
+}
+
+/* ============ PS3 ATMOSPHERE — floating dust motes + drifting shami leaves ============ */
+var dustGeo=new THREE.BufferGeometry();
+var dustPos=new Float32Array(260*3), dustSeed=[];
+for(var di=0;di<260;di++){ dustPos[di*3]=Math.random()*40-20; dustPos[di*3+1]=0.4+Math.random()*7; dustPos[di*3+2]=Math.random()*42-21; dustSeed.push(Math.random()*6.28); }
+if(dustGeo.setAttribute) dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPos,3));
+else if(dustGeo.addAttribute) dustGeo.addAttribute('position',new THREE.BufferAttribute(dustPos,3));
+var dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xfff3c0,size:0.14,transparent:true,opacity:0.55,depthWrite:false}));
+scene.add(dust);
+var leavesFx=[];
+for(var li=0;li<30;li++){
+  var lf=new THREE.Mesh(new THREE.PlaneGeometry(0.22,0.3), new THREE.MeshPhongMaterial({color:Math.random()<0.5?0x55a047:0x77b04a,side:THREE.DoubleSide,shininess:20}));
+  lf.position.set(3+(Math.random()*10-5),2+Math.random()*6,-14+(Math.random()*10-5));
+  scene.add(lf); leavesFx.push({m:lf,ph:Math.random()*6.28,sp:0.5+Math.random()*0.7});
+}
+function tickFx(dt,t){
+  var arr=dustGeo.attributes.position.array;
+  for(var i=0;i<260;i++){ arr[i*3+1]-=dt*0.22; arr[i*3]+=Math.sin(t*0.7+dustSeed[i])*dt*0.35; if(arr[i*3+1]<0.2) arr[i*3+1]=7.5; }
+  dustGeo.attributes.position.needsUpdate=true;
+  leavesFx.forEach(function(L){
+    L.m.position.y-=dt*L.sp; L.m.position.x+=Math.sin(t*1.4+L.ph)*dt*0.8; L.m.rotation.x+=dt*2.1; L.m.rotation.z+=dt*1.4;
+    if(L.m.position.y<0.15){ L.m.position.y=6.5+Math.random()*2; L.m.position.x=3+(Math.random()*10-5); L.m.position.z=-14+(Math.random()*10-5); }
+  });
+  for(var s=0;s<shineFx.length;s++){ var mt=shineFx[s];
+    if(mt.isSpriteMaterial||mt.isMeshBasicMaterial) mt.opacity=0.42+0.2*Math.sin(t*3.1+s*1.7);
+    else if(mt.emissiveIntensity!==undefined) mt.emissiveIntensity=0.85+0.35*Math.sin(t*9+s*2.3);
+  }
+  torchGlowL.material.opacity=0.7+0.2*Math.sin(t*11); torchGlowR.material.opacity=0.7+0.2*Math.sin(t*11+2);
+  sparkle.position.z=4+Math.sin(t*0.35)*5; sparkle.material.opacity=0.35+0.25*Math.sin(t*2.2);
+  foam.material.opacity=0.26+0.12*Math.sin(t*1.8);
 }
 
 /* ============ AUDIO — generic in-code chiptune ============ */
@@ -491,13 +615,18 @@ function update(dt,t){
   var moving=Math.hypot(mx,mz)>0.12;
   if(moving){
     var m=Math.hypot(mx,mz); mx/=m; mz/=m;
-    G.facing=angLerp(G.facing,Math.atan2(mx,mz),dt*16); // smooth PS2-style turning
+    G.facing=angLerp(G.facing,Math.atan2(mx,mz),dt*18); // smooth interpolated PS3-style turning
     var sp=7.2;
     var np=collide(velPos.x+mx*sp*dt, velPos.z+mz*sp*dt, 0.6);
     velPos.x=np.x; velPos.z=np.z;
     G.walk+=dt*10;
   }
   vel.rotation.y=G.facing;
+  // Fluid body language: lean into the run, breathe at idle
+  var targetLean=moving?0.13:0;
+  vel.rotation.x+= (targetLean-vel.rotation.x)*Math.min(1,dt*10);
+  if(P.torso) P.torso.scale.y=1+Math.sin(t*2.1)*0.018;
+  tickFx(dt,t);
   var bob=moving?Math.abs(Math.sin(G.walk))*0.09:Math.sin(t*2)*0.02;
   velPos.y=bob;
   P.legL.rotation.x=moving?Math.sin(G.walk)*0.75:0;
@@ -614,6 +743,8 @@ function loop(){
       hawkShadow.position.x=hawk.position.x; hawkShadow.position.z=hawk.position.z;
       dog.userData.parts.tail.rotation.y=Math.sin(t*9)*0.45;
       vel.userData.parts.armR.rotation.x=Math.sin(t*2)*0.05;
+      if(vel.userData.parts.torso) vel.userData.parts.torso.scale.y=1+Math.sin(t*2.1)*0.018;
+      tickFx(dt,t);
     }
     renderer.render(scene,camera);
   }catch(e){ errBox.style.display='block'; errBox.textContent='Error: '+e.message; }
